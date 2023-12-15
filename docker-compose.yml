@@ -1,0 +1,83 @@
+version: '3.5'
+
+networks:
+  rinha:
+    driver: bridge
+
+services:
+  api01:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "9001:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: '0.4GB'
+    networks:
+      - rinha
+  api02:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "9002:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: '0.4GB'
+    networks:
+      - rinha
+
+  nginx: # Load Balancer
+    image: nginx:latest
+    depends_on:
+      - api02
+      - api01
+    deploy:
+      resources:
+        limits:
+          cpus: '0.15'
+          memory: '0.5GB'
+    ports:
+      - "9999:9999"
+    networks:
+      - rinha
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+  db: # Banco de dados
+    image: mysql:latest
+    hostname: db
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: rinhadb
+    ports:
+      - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.7'
+          memory: '1.4GB'
+    networks:
+      - rinha
+
+  redis:
+    image: redis
+    hostname: redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.15'
+          memory: '0.3GB'
+    networks:
+      - rinha
