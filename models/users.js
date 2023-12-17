@@ -24,11 +24,11 @@ Users.init(
       allowNull: false,
     },
     nascimento: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     stack: {
-      type: DataTypes.JSON(DataTypes.STRING(32)),
+      type: DataTypes.TEXT(DataTypes.STRING(32)),
       allowNull: true,
     },
     createdAt: {

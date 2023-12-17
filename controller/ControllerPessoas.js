@@ -1,4 +1,5 @@
 import { Sequelize, Op } from "sequelize";
+import validator from "validator";
 
 import Users from "../models/users.js";
 
@@ -7,40 +8,52 @@ export class ControllerPessoa {
 
     }
 
+
+
     async inserirPessoa(req, res) {
         try {
             const dadosDoCorpo = req.body;
 
             // Validar os campos obrigatórios
-            const { apelido, nome, nascimento, stack } = dadosDoCorpo;
+            let { apelido, nome, nascimento, stack } = dadosDoCorpo;
 
-            if (!apelido || !nome || !nascimento) {
-                // Requisição inválida
+            // Validar limites de tamanho para strings
+            if (!apelido || !validator.isLength(apelido, { min: 1, max: 32 }) ||
+                !nome || !validator.isLength(nome, { min: 1, max: 100 }) ||
+                !nascimento || !validator.isDate(nascimento)) {
                 return res.status(422).json({ error: 'Dados inválidos na requisição' });
             }
 
             // Validar o campo stack, se existir
-            if (stack && (!Array.isArray(stack) || stack.some(item => typeof item !== 'string'))) {
-                // Requisição inválida para o vetor de stack
+            if (stack && (!Array.isArray(stack) || !stack.every(item => validator.isLength(item, { min: 1, max: 32 })))) {
                 return res.status(422).json({ error: 'Stack inválido' });
             }
 
-            const id = await Users.create({
-                apelido: dadosDoCorpo.apelido,
-                nome: dadosDoCorpo.nome,
-                nascimento: dadosDoCorpo.nascimento,
-                stack: dadosDoCorpo.stack || [],
-            })
+            const markedUser = await Users.findOne({
+                where: {
+                    apelido: apelido
+                }
+            });
+
+            if (markedUser)  return res.status(422).json({ error: 'Apelido Duplicado' });
+
+            stack = stack && Array.isArray(stack) ? JSON.stringify(stack) : '';
+
+            const user = await Users.create({
+                apelido: apelido,
+                nome: nome,
+                nascimento: nascimento,
+                stack: stack,
+            });
 
             // Retornar status code 201 e o header "Location"
-            res.status(201).header('Location', `/pessoas/${id}`).json({
-                success: 'Pessoa criada com sucesso',
-                id,
+            return res.status(201).header('Location', `/pessoas/${user.id}`).json({
+                success: 'Pessoa criada com sucesso'
             });
         } catch (error) {
-            return res.status(422).json({ error: 'Stack inválido' });
+            console.error(error);
+            return res.status(422).json({ "error": error });
         }
-
     }
 
 
@@ -48,16 +61,17 @@ export class ControllerPessoa {
         const id = req.params.id; // Parâmetro da URL
 
         try {
+
             const pessoa = await Users.findByPk(id);
 
             if (!pessoa) {
                 return res.status(404).json({ error: 'Pessoa não encontrada' });
             }
 
-            res.status(200).json(pessoa);
+            return res.status(200).json(pessoa);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: 'Erro interno do servidor' });
+            return res.status(404).json({ error: error });
         }
     }
 
@@ -69,20 +83,21 @@ export class ControllerPessoa {
         }
 
         try {
-            const pessoasEncontradas = await Users.findAll({
-                where: {
+            // const pessoasEncontradas = await Users.findAll({
+            //     where: {
+            //         [Op.or]: [
+            //             { stack: { [Op.like]: `%${termoDeBusca}%` } },
+            //             { nome: { [Op.like]: `%${termoDeBusca}%` } },
+            //             { apelido: { [Op.like]: `%${termoDeBusca}%` } }
+            //         ],
+            //     },
+            // });
 
-                    nome: { [Op.like]: `%${termoDeBusca}%` },
-                    apelido: { [Op.like]: `%${termoDeBusca}%` },
-                    stack: { [Op.like]: `%${termoDeBusca}%` },
 
-                },
-            });
-
-            res.status(200).json(pessoasEncontradas);
+            res.status(200).json({"dd":"dd"});
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: 'Erro interno do servidor' });
+            res.status(404).json({ error: error });
         }
     }
 
@@ -90,10 +105,10 @@ export class ControllerPessoa {
         try {
             const totalPessoas = await Users.count();
 
-            res.status(200).json({ total: totalPessoas });
+            return res.status(200).json({ total: totalPessoas });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: 'Erro interno do servidor' });
+            return res.status(404).json({ error: error });
         }
     }
 

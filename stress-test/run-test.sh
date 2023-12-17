@@ -4,7 +4,7 @@
 # curl -v -XGET "http://localhost:9999/pessoas?t=xpto"
 # curl -v "http://localhost:9999/contagem-pessoas"
 
-GATLING_BIN_DIR=$HOME/Downloads/gatling-charts-highcharts-bundle-3.9.5/bin
+GATLING_BIN_DIR=$HOME/rinhaJS/gatling-charts-highcharts-bundle-3.9.5/bin
 
 WORKSPACE=$HOME/rinhaJS/stress-test
 

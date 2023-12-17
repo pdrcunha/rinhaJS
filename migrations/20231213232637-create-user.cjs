@@ -20,11 +20,11 @@ module.exports = {
         allowNull: false
       },
       nascimento: {
-        type: DataTypes.DATEONLY,
+        type: DataTypes.DATE,
         allowNull: false
       },
       stack: {
-        type: DataTypes.JSON(DataTypes.STRING(32)),
+        type: DataTypes.TEXT(),
         allowNull: true
       },
       createdAt: {

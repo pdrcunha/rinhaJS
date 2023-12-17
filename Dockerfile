@@ -16,5 +16,6 @@ COPY . .
 # Exponha a porta que a aplicação vai rodar
 EXPOSE 3000
 
-# Comando para iniciar a aplicação
-CMD ["npm", "start"]
+# Comando para rodar o rollback seguido de migrate antes de iniciar a aplicação
+ CMD npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npm start
+# CMD ["npm", "start"]
